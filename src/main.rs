@@ -1,17 +1,12 @@
-use dotenv::dotenv;
-use teloxide::{dispatching::dialogue::InMemStorage, prelude::*};
+use axum::{routing::get, Router};
 
-type MyDialogue = Dialogue<State, InMemStorage<State>>;
-type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
-
-#[derive(Clone, Default)]
-pub enum State {
-    #[default]
-    Start,
+async fn hello_world() -> &'static str {
+    "Hello, world!"
 }
 
-fn main() {
-    dotenv().ok(); // Load env variables
+#[shuttle_runtime::main]
+async fn axum() -> shuttle_axum::ShuttleAxum {
+    let router = Router::new().route("/", get(hello_world));
 
-    let telebot_api_token = std::env::var("TELOXIDE_TOKEN").expect("TELOXIDE_TOKEN must set.");
+    Ok(router.into())
 }
