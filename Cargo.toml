@@ -2,9 +2,16 @@
 name = "telerunbot"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [dependencies]
-axum = "0.6.18"
-shuttle-axum = "0.24.0"
+anyhow = "1.0.62"
+axum = "0.6.4"
+hyper = "0.14.24"
+poise = "0.5.2"
+serde = "1.0"
 shuttle-runtime = "0.24.0"
-tokio = "1.28.2"
+shuttle-secrets = "0.24.0"
+shuttle-shared-db = { version = "0.24.0", features = ["postgres", "sqlx"] }
+tokio = "1.26.0"
+reqwest = "0.11.14"
