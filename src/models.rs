@@ -7,7 +7,7 @@ pub struct User {
 
 #[derive(sqlx::FromRow)]
 pub struct Run {
-    id: i32,
-    distance: f32,
-    user_id: i32,
+    pub id: i32,
+    pub distance: f32,
+    pub user_id: i32,
 }

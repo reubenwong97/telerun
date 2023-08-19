@@ -2,6 +2,10 @@ mod bot;
 mod database;
 mod models;
 
+extern crate pretty_env_logger;
+#[macro_use]
+extern crate log;
+
 use bot::BotService;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
@@ -12,6 +16,9 @@ async fn shuttle_main(
     #[shuttle_secrets::Secrets] secrets: SecretStore,
     #[shuttle_shared_db::Postgres] postgres: PgPool,
 ) -> Result<BotService, shuttle_runtime::Error> {
+    pretty_env_logger::init();
+    info!("Logging initialised...");
+
     sqlx::migrate!()
         .run(&postgres)
         .await
