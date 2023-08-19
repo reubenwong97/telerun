@@ -5,17 +5,13 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = "1.0.62"
-axum = "0.6.4"
-hyper = "0.14.24"
-poise = "0.5.2"
-serde = "1.0"
 shuttle-runtime = "0.24.0"
-shuttle-secrets = "0.24.0"
-shuttle-shared-db = { version = "0.24.0", features = ["postgres", "sqlx"] }
-tokio = "1.26.0"
-reqwest = "0.11.14"
+tokio = { version = "1.26.0" }
 sqlx = { version = "0.7.1", features = [
     "runtime-tokio-native-tls",
     "postgres",
 ] }
+teloxide = { version = "0.12.0", features = ["macros"] }
+shuttle-shared-db = { version = "0.24.0", features = ["postgres", "sqlx"] }
+shuttle-secrets = "0.24.0"
+reqwest = "0.11.18"

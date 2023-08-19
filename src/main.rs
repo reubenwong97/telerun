@@ -1,16 +1,27 @@
+mod bot;
+mod database;
+
+use bot::BotService;
+use shuttle_secrets::SecretStore;
+use sqlx::PgPool;
+use teloxide::prelude::*;
+
 #[shuttle_runtime::main]
-async fn shuttle_main() -> Result<MyService, shuttle_runtime::Error> {
-    Ok(MyService {})
-}
+async fn shuttle_main(
+    #[shuttle_secrets::Secrets] secrets: SecretStore,
+    #[shuttle_shared_db::Postgres] postgres: PgPool,
+) -> Result<BotService, shuttle_runtime::Error> {
+    sqlx::migrate!()
+        .run(&postgres)
+        .await
+        .expect("ERROR: Could not carry out migrations!");
 
-// Customize this struct with things from `shuttle_main` needed in `bind`,
-// such as secrets or database connections
-struct MyService {}
+    let teloxide_key = secrets
+        .get("TELOXIDE_TOKEN")
+        .expect("TELOXIDE_TOKEN needs to be set.");
 
-#[shuttle_runtime::async_trait]
-impl shuttle_runtime::Service for MyService {
-    async fn bind(self, _addr: std::net::SocketAddr) -> Result<(), shuttle_runtime::Error> {
-        // Start your service and bind to the socket address
-        Ok(())
-    }
+    Ok(BotService {
+        bot: Bot::new(teloxide_key),
+        postgres,
+    })
 }
