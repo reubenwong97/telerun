@@ -6,11 +6,42 @@ pub async fn create_user(
     chat_id: ChatId,
     connection: PgPool,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("INSERT INTO users (chat_id, user_name) VALUES ($1, $2)")
+    sqlx::query(
+        "INSERT INTO users (chat_id, user_name) 
+        VALUES ($1, $2)
+        ON CONFLICT (chat_id, user_name) DO NOTHING",
+    )
+    .bind(chat_id.to_string())
+    .bind(user_name)
+    .execute(&connection)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn delete_user(
+    user_name: &str,
+    chat_id: ChatId,
+    connection: PgPool,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM users WHERE chat_id = $1 AND user_name = $2")
         .bind(chat_id.to_string())
-        .bind(user_name.to_string())
+        .bind(user_name)
         .execute(&connection)
         .await?;
 
+    Ok(())
+}
+
+pub async fn add_run_wrapper(
+    distance: f32,
+    user_name: &str,
+    chat_id: ChatId,
+    connection: PgPool,
+) -> Result<(), sqlx::Error> {
+    Ok(())
+}
+
+async fn add_run(distance: f32, user_id: i32, connection: PgPool) -> Result<(), sqlx::Error> {
     Ok(())
 }
