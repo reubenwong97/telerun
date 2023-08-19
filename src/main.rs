@@ -1,5 +1,6 @@
 mod bot;
 mod database;
+mod models;
 
 use bot::BotService;
 use shuttle_secrets::SecretStore;

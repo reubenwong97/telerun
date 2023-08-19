@@ -1,4 +1,5 @@
-use sqlx::PgPool;
+use crate::models::{Run, User};
+use sqlx::{postgres::PgRow, PgPool};
 use teloxide::types::ChatId;
 
 pub async fn create_user(
@@ -31,6 +32,25 @@ pub async fn delete_user(
         .await?;
 
     Ok(())
+}
+
+async fn get_user(
+    user_name: &str,
+    chat_id: ChatId,
+    connection: PgPool,
+) -> Result<Option<User>, sqlx::Error> {
+    let user: Option<User> = sqlx::query_as!(
+        User,
+        "SELECT id, chat_id, user_name
+    FROM users
+    WHERE user_name = $1 AND chat_id = $2",
+        user_name,
+        chat_id.to_string()
+    )
+    .fetch_optional(&connection)
+    .await?;
+
+    Ok(user)
 }
 
 pub async fn add_run_wrapper(
