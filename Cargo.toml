@@ -19,3 +19,4 @@ teloxide = { version = "0.12.0", features = ["macros"] }
 shuttle-shared-db = { version = "0.24.0", features = ["postgres", "sqlx"] }
 shuttle-secrets = "0.24.0"
 reqwest = "0.11.18"
+askama = "0.12.0"

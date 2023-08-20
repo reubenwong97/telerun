@@ -1,5 +1,6 @@
 mod bot;
 mod database;
+mod message;
 mod models;
 
 extern crate pretty_env_logger;
