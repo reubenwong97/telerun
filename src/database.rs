@@ -120,7 +120,37 @@ async fn add_run(distance: f32, user_id: i32, connection: &PgPool) -> Result<(),
     Ok(())
 }
 
-async fn get_tally(
+pub async fn get_runs(
+    chat_id: ChatId,
+    limit: u32,
+    connection: &PgPool,
+) -> Result<Option<Vec<Run>>, sqlx::Error> {
+    let runs: Vec<_> = sqlx::query!(
+        "SELECT *
+        FROM runs
+        ORDER BY run_datetime DESC
+        LIMIT $1",
+        limit
+    )
+    .fetch_all(connection)
+    .await?
+    .iter()
+    .map(|row| Run {
+        id: row.id,
+        distance: row.distance,
+        run_datetime: row.run_datetime,
+        user_id: row.user_id,
+    })
+    .collect();
+
+    if !runs.is_empty() {
+        Ok(Some(runs))
+    } else {
+        Ok(None)
+    }
+}
+
+pub async fn get_tally(
     chat_id: ChatId,
     connection: &PgPool,
 ) -> Result<Option<Vec<Score>>, sqlx::Error> {

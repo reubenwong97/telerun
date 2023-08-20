@@ -1,3 +1,5 @@
+use sqlx::types::chrono;
+
 #[derive(sqlx::FromRow)]
 pub struct User {
     pub id: i32,
@@ -9,6 +11,7 @@ pub struct User {
 pub struct Run {
     pub id: i32,
     pub distance: f32,
+    pub run_datetime: chrono::DateTime<chrono::Utc>,
     pub user_id: i32,
 }
 

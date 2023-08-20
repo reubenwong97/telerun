@@ -1,3 +1,4 @@
+use crate::database::*;
 use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
 
@@ -51,6 +52,8 @@ enum Command {
     Delete { run_id: u32 },
     #[command(description = "Tallies current medals and distances.")]
     Tally,
+    #[command(description = "Lists recent runs. Number of runs to display must be specified.")]
+    List { limit: u32 },
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> ResponseResult<()> {
@@ -72,7 +75,17 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
             bot.send_message(msg.chat.id, "Delete".to_string()).await?;
         }
         Command::Tally => {
-            bot.send_message(msg.chat.id, "Tally".to_string()).await?;
+            let tally = get_tally(msg.chat.id, &db_connection)
+                .await
+                .expect("Failed to retrieve tallies.");
+            if let Some(tally) = tally {
+                // do something
+            }
+            bot.send_message(msg.chat.id, "No scores are available!")
+                .await?;
+        }
+        Command::List { limit: u32 } => {
+            bot.send_message(msg.chat.id, "List".to_string()).await?;
         }
     }
     Ok(())
