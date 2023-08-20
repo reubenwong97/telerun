@@ -11,3 +11,9 @@ pub struct Run {
     pub distance: f32,
     pub user_id: i32,
 }
+
+pub struct Score {
+    pub user_name: String,
+    pub medals: u32,
+    pub distance: f32,
+}

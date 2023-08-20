@@ -1,4 +1,4 @@
-use crate::models::{Run, User};
+use crate::models::{Run, Score, User};
 use sqlx::{postgres::PgRow, PgPool};
 use teloxide::types::ChatId;
 
@@ -55,6 +55,34 @@ async fn get_user(
     Ok(user)
 }
 
+async fn get_users_in_chat(
+    chat_id: ChatId,
+    connection: &PgPool,
+) -> Result<Option<Vec<User>>, sqlx::Error> {
+    let users: Vec<User> = sqlx::query!(
+        "SELECT id, chat_id, user_name
+        FROM users
+        WHERE chat_id = $1",
+        chat_id.to_string()
+    )
+    .fetch_all(connection)
+    .await?
+    .iter()
+    .map(|user_row| User {
+        id: user_row.id,
+        chat_id: user_row.chat_id.clone(),
+        user_name: user_row.user_name.clone(),
+    })
+    .collect();
+
+    if !users.is_empty() {
+        Ok(Some(users))
+    } else {
+        Ok(None)
+    }
+}
+
+// TODO: refactor in the future
 pub async fn add_run_wrapper(
     distance: f32,
     user_name: &str,
@@ -90,4 +118,38 @@ async fn add_run(distance: f32, user_id: i32, connection: &PgPool) -> Result<(),
     .await?;
 
     Ok(())
+}
+
+async fn get_tally(
+    chat_id: ChatId,
+    connection: &PgPool,
+) -> Result<Option<Vec<Score>>, sqlx::Error> {
+    let users = get_users_in_chat(chat_id, connection).await?;
+
+    if let Some(users) = users {
+        let user_ids: Vec<i32> = users.iter().map(|user| user.id).collect();
+        let tally = sqlx::query!(
+            "SELECT user_name, COUNT(*), SUM(distance)
+            FROM runs
+            JOIN users ON users.id = runs.user_id
+            WHERE user_id = ANY($1)
+            GROUP BY user_name",
+            &user_ids[..],
+        )
+        .fetch_all(connection)
+        .await?;
+
+        let scores: Vec<Score> = tally
+            .iter()
+            .map(|tally| Score {
+                user_name: tally.user_name.clone(),
+                medals: tally.count.unwrap() as u32,
+                distance: tally.sum.unwrap(),
+            })
+            .collect();
+
+        return Ok(Some(scores));
+    }
+
+    Ok(None)
 }
