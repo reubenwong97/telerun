@@ -122,29 +122,37 @@ async fn add_run(distance: f32, user_id: i32, connection: &PgPool) -> Result<(),
 
 pub async fn get_runs(
     chat_id: ChatId,
-    limit: u32,
+    limit: i64,
     connection: &PgPool,
 ) -> Result<Option<Vec<Run>>, sqlx::Error> {
-    let runs: Vec<_> = sqlx::query!(
-        "SELECT *
-        FROM runs
-        ORDER BY run_datetime DESC
-        LIMIT $1",
-        limit
-    )
-    .fetch_all(connection)
-    .await?
-    .iter()
-    .map(|row| Run {
-        id: row.id,
-        distance: row.distance,
-        run_datetime: row.run_datetime,
-        user_id: row.user_id,
-    })
-    .collect();
+    let users_in_chat = get_users_in_chat(chat_id, connection).await?;
+    if let Some(users) = users_in_chat {
+        let user_ids: Vec<i32> = users.iter().map(|user| user.id).collect();
+        let runs: Vec<_> = sqlx::query!(
+            "SELECT *
+            FROM runs
+            WHERE user_id = ANY($1)
+            ORDER BY run_datetime DESC
+            LIMIT $2",
+            &user_ids[..],
+            limit
+        )
+        .fetch_all(connection)
+        .await?
+        .iter()
+        .map(|row| Run {
+            id: row.id,
+            distance: row.distance,
+            run_datetime: row.run_datetime,
+            user_id: row.user_id,
+        })
+        .collect();
 
-    if !runs.is_empty() {
-        Ok(Some(runs))
+        if !runs.is_empty() {
+            Ok(Some(runs))
+        } else {
+            Ok(None)
+        }
     } else {
         Ok(None)
     }

@@ -11,7 +11,7 @@ pub struct User {
 pub struct Run {
     pub id: i32,
     pub distance: f32,
-    pub run_datetime: chrono::DateTime<chrono::Utc>,
+    pub run_datetime: Option<chrono::NaiveDateTime>,
     pub user_id: i32,
 }
 

@@ -84,7 +84,10 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
             bot.send_message(msg.chat.id, "No scores are available!")
                 .await?;
         }
-        Command::List { limit: u32 } => {
+        Command::List { limit } => {
+            let runs = get_runs(msg.chat.id, limit.into(), &db_connection)
+                .await
+                .expect("Unable to retrieve runs.");
             bot.send_message(msg.chat.id, "List".to_string()).await?;
         }
     }
