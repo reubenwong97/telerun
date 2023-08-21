@@ -39,8 +39,11 @@ struct ListRunTemplate<'a> {
 pub fn list_runs(runs: Option<Vec<Run>>) -> String {
     if let Some(runs) = runs {
         let run_displays: Vec<RunDisplay> = runs.into_iter().map(|run| RunDisplay(run)).collect();
+        let run_template = ListRunTemplate {
+            runs: &run_displays,
+        };
 
-        "Hello".to_string()
+        format!("{}", run_template.render().unwrap())
     } else {
         "No runs in database.".into()
     }
