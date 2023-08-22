@@ -55,7 +55,7 @@ async fn get_user(
     Ok(user)
 }
 
-async fn get_users_in_chat(
+pub async fn get_users_in_chat(
     chat_id: ChatId,
     connection: &PgPool,
 ) -> Result<Option<Vec<User>>, sqlx::Error> {

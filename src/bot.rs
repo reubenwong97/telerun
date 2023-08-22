@@ -41,6 +41,8 @@ impl BotService {
 enum Command {
     #[command(description = "display this text")]
     Help,
+    #[command(description = "Show users registered on telerun within the chat.")]
+    Show,
     #[command(
         description = "Add run data to database. Format is /add %distance (km)% %username%",
         parse_with = "split"
@@ -61,6 +63,11 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
         Command::Help => {
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
                 .await?;
+        }
+        Command::Show => {
+            let users = get_users_in_chat(msg.chat.id, &db_connection)
+                .await
+                .expect("Unable to retrieve users registered with telerunbot wihtin chat.");
         }
         Command::Add {
             distance,

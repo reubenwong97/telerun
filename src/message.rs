@@ -1,4 +1,4 @@
-use crate::models::Run;
+use crate::models::{Run, User};
 use askama::Template;
 use std::fmt;
 use std::ops;
@@ -30,8 +30,14 @@ impl fmt::Display for RunDisplay {
     }
 }
 
+impl fmt::Display for User {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", self.id, self.user_name)
+    }
+}
+
 #[derive(Template)]
-#[template(path = "list_runs.html")]
+#[template(path = "list_runs.j2")]
 struct ListRunTemplate<'a> {
     runs: &'a Vec<RunDisplay>,
 }
@@ -49,8 +55,20 @@ pub fn list_runs(runs: Option<Vec<Run>>) -> String {
     }
 }
 
+#[derive(Template)]
+#[template(path = "list_users.j2")]
+struct ListUserTemplate<'a> {
+    users: &'a Vec<User>,
+}
+
+pub fn list_users(users: Option<Vec<User>>) -> String {
+    "Hello".to_string()
+}
+
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use sqlx::types::chrono;
 
     use super::*;
@@ -78,6 +96,14 @@ mod tests {
 
   2. 2 2 1970-01-01 00:01:22 2
 ";
+        assert_eq!(render, ans);
+    }
+
+    #[test]
+    fn list_empty_runs_template() {
+        let runs: Option<Vec<Run>> = None;
+        let render = list_runs(runs);
+        let ans = "No runs in database.";
         assert_eq!(render, ans);
     }
 }
