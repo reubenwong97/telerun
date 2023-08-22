@@ -1,5 +1,5 @@
 use crate::models::{Run, Score, User};
-use sqlx::{postgres::PgRow, PgPool};
+use sqlx::PgPool;
 use teloxide::types::ChatId;
 
 pub async fn create_user(

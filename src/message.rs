@@ -31,7 +31,7 @@ impl fmt::Display for RunDisplay {
 }
 
 #[derive(Template)]
-#[template(path = "list_runs.html", print = "all")]
+#[template(path = "list_runs.html")]
 struct ListRunTemplate<'a> {
     runs: &'a Vec<RunDisplay>,
 }
@@ -46,5 +46,38 @@ pub fn list_runs(runs: Option<Vec<Run>>) -> String {
         format!("{}", run_template.render().unwrap())
     } else {
         "No runs in database.".into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use sqlx::types::chrono;
+
+    use super::*;
+
+    #[test]
+    fn list_runs_template() {
+        let runs = vec![
+            Run {
+                id: 1,
+                distance: 1.,
+                run_datetime: chrono::NaiveDateTime::from_timestamp_opt(61, 0),
+                user_id: 1,
+            },
+            Run {
+                id: 2,
+                distance: 2.,
+                run_datetime: chrono::NaiveDateTime::from_timestamp_opt(82, 0),
+                user_id: 2,
+            },
+        ];
+        let render = list_runs(Some(runs));
+        // TODO: i actually dont want this kind of html templates anyway
+        let ans = "
+  1. 1 1 1970-01-01 00:01:01 1
+
+  2. 2 2 1970-01-01 00:01:22 2
+";
+        assert_eq!(render, ans);
     }
 }

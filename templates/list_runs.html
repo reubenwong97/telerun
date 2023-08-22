@@ -1,5 +1,3 @@
-<ol>
-  {% for run in runs %}
-  <li>run</li>
-  {% endfor %}
-</ol>
+{% for run in runs %}
+  {{ loop.index }}. {{ run }}
+{% endfor %}

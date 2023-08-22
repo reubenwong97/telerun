@@ -1,4 +1,4 @@
-use crate::database::*;
+use crate::{database::*, message::list_runs};
 use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
 
@@ -88,7 +88,8 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
             let runs = get_runs(msg.chat.id, limit.into(), &db_connection)
                 .await
                 .expect("Unable to retrieve runs.");
-            bot.send_message(msg.chat.id, "List".to_string()).await?;
+            let run_message = list_runs(runs);
+            bot.send_message(msg.chat.id, run_message).await?;
         }
     }
     Ok(())
