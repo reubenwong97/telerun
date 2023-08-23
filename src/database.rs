@@ -2,11 +2,9 @@ use crate::models::{Run, Score, User};
 use sqlx::PgPool;
 use teloxide::types::ChatId;
 
-pub async fn create_user(
-    user_name: &str,
-    chat_id: ChatId,
-    connection: &PgPool,
-) -> Result<(), sqlx::Error> {
+type DBResult<T> = Result<T, sqlx::Error>;
+
+pub async fn create_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<()> {
     sqlx::query!(
         "INSERT INTO users (chat_id, user_name) 
         VALUES ($1, $2)
@@ -20,11 +18,7 @@ pub async fn create_user(
     Ok(())
 }
 
-pub async fn delete_user(
-    user_name: &str,
-    chat_id: ChatId,
-    connection: &PgPool,
-) -> Result<(), sqlx::Error> {
+pub async fn delete_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<()> {
     sqlx::query!(
         "DELETE FROM users WHERE chat_id = $1 AND user_name = $2",
         chat_id.to_string(),
@@ -36,11 +30,7 @@ pub async fn delete_user(
     Ok(())
 }
 
-async fn get_user(
-    user_name: &str,
-    chat_id: ChatId,
-    connection: &PgPool,
-) -> Result<Option<User>, sqlx::Error> {
+async fn get_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<Option<User>> {
     let user: Option<User> = sqlx::query_as!(
         User,
         "SELECT id, chat_id, user_name
@@ -58,7 +48,7 @@ async fn get_user(
 pub async fn get_users_in_chat(
     chat_id: ChatId,
     connection: &PgPool,
-) -> Result<Option<Vec<User>>, sqlx::Error> {
+) -> DBResult<Option<Vec<User>>> {
     let users: Vec<User> = sqlx::query!(
         "SELECT id, chat_id, user_name
         FROM users
@@ -87,8 +77,8 @@ pub async fn add_run_wrapper(
     distance: f32,
     user_name: &str,
     chat_id: ChatId,
-    connection: PgPool,
-) -> Result<(), sqlx::Error> {
+    connection: &PgPool,
+) -> DBResult<()> {
     let user = get_user(user_name, chat_id, &connection).await?;
 
     if let Some(user) = user {
@@ -106,7 +96,7 @@ pub async fn add_run_wrapper(
     Ok(())
 }
 
-async fn add_run(distance: f32, user_id: i32, connection: &PgPool) -> Result<(), sqlx::Error> {
+async fn add_run(distance: f32, user_id: i32, connection: &PgPool) -> DBResult<()> {
     sqlx::query!(
         "INSERT INTO runs (distance, user_id)
     VALUES ($1, $2)
@@ -124,7 +114,7 @@ pub async fn get_runs(
     chat_id: ChatId,
     limit: i64,
     connection: &PgPool,
-) -> Result<Option<Vec<Run>>, sqlx::Error> {
+) -> DBResult<Option<Vec<Run>>> {
     let users_in_chat = get_users_in_chat(chat_id, connection).await?;
     if let Some(users) = users_in_chat {
         let user_ids: Vec<i32> = users.iter().map(|user| user.id).collect();
@@ -158,10 +148,33 @@ pub async fn get_runs(
     }
 }
 
-pub async fn get_tally(
-    chat_id: ChatId,
-    connection: &PgPool,
-) -> Result<Option<Vec<Score>>, sqlx::Error> {
+pub async fn update_run(run_id: i32, distance: f32, connection: &PgPool) -> DBResult<()> {
+    sqlx::query!(
+        "UPDATE runs
+        SET distance = $1
+        WHERE id = $2",
+        distance,
+        run_id,
+    )
+    .execute(connection)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn delete_run(run_id: i32, connection: &PgPool) -> DBResult<()> {
+    sqlx::query!(
+        "DELETE FROM runs
+        WHERE id = $1",
+        run_id,
+    )
+    .execute(connection)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn get_tally(chat_id: ChatId, connection: &PgPool) -> DBResult<Option<Vec<Score>>> {
     let users = get_users_in_chat(chat_id, connection).await?;
 
     if let Some(users) = users {

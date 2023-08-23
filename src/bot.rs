@@ -1,4 +1,7 @@
-use crate::{database::*, message::list_runs};
+use crate::{
+    database::*,
+    message::{list_runs, list_users},
+};
 use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
 
@@ -68,12 +71,21 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
             let users = get_users_in_chat(msg.chat.id, &db_connection)
                 .await
                 .expect("Unable to retrieve users registered with telerunbot wihtin chat.");
+            let show_message = list_users(users);
+            bot.send_message(msg.chat.id, show_message).await?;
         }
         Command::Add {
             distance,
             user_name,
         } => {
-            bot.send_message(msg.chat.id, "Add".to_string()).await?;
+            add_run_wrapper(distance, user_name.as_str(), msg.chat.id, &db_connection)
+                .await
+                .expect("Unable to add run to database.");
+            bot.send_message(
+                msg.chat.id,
+                format!("{} ran {}km added to database.", user_name, distance),
+            )
+            .await?;
         }
         Command::Edit { run_id, distance } => {
             bot.send_message(msg.chat.id, "Edit".to_string()).await?;

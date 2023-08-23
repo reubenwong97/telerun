@@ -62,7 +62,13 @@ struct ListUserTemplate<'a> {
 }
 
 pub fn list_users(users: Option<Vec<User>>) -> String {
-    "Hello".to_string()
+    if let Some(users) = users {
+        let user_template = ListUserTemplate { users: &users };
+
+        format!("{}", user_template.render().unwrap())
+    } else {
+        "No users in database.".into()
+    }
 }
 
 #[cfg(test)]
@@ -104,6 +110,37 @@ mod tests {
         let runs: Option<Vec<Run>> = None;
         let render = list_runs(runs);
         let ans = "No runs in database.";
+        assert_eq!(render, ans);
+    }
+
+    #[test]
+    fn list_users_template() {
+        let users = vec![
+            User {
+                id: 1,
+                chat_id: "chat1".into(),
+                user_name: "meme".into(),
+            },
+            User {
+                id: 2,
+                chat_id: "chat1".into(),
+                user_name: "youyou".into(),
+            },
+        ];
+        let render = list_users(Some(users));
+        let ans = "
+  1. 1 meme
+
+  2. 2 youyou
+";
+        assert_eq!(render, ans);
+    }
+
+    #[test]
+    fn list_empty_users_template() {
+        let users: Option<Vec<User>> = None;
+        let render = list_users(users);
+        let ans = "No users in database.";
         assert_eq!(render, ans);
     }
 }
