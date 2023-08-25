@@ -85,7 +85,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
         } => {
             let add_result =
                 add_run_wrapper(distance, user_name.as_str(), msg.chat.id, &db_connection).await;
-            if let Ok(_) = add_result {
+            if add_result.is_ok() {
                 bot.send_message(
                     msg.chat.id,
                     format!("{} ran {}km added to database.", user_name, distance),
@@ -99,7 +99,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
         }
         Command::Edit { run_id, distance } => {
             let update_outcome = update_run(run_id, distance, &db_connection).await;
-            if let Ok(_) = update_outcome {
+            if update_outcome.is_ok() {
                 bot.send_message(
                     msg.chat.id,
                     format!(
@@ -116,7 +116,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
         }
         Command::Delete { run_id } => {
             let delete_outcome = delete_run(run_id, &db_connection).await;
-            if let Ok(_) = delete_outcome {
+            if delete_outcome.is_ok() {
                 bot.send_message(msg.chat.id, format!("Run {} successfully deleted!", run_id))
                     .await
                     .map_err(|error| error!("Unable to send delete message: {:?}", error))

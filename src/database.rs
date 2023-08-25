@@ -67,15 +67,15 @@ pub async fn add_run_wrapper(
     chat_id: ChatId,
     connection: &PgPool,
 ) -> DBResult<()> {
-    let user = get_user(user_name, chat_id, &connection).await?;
+    let user = get_user(user_name, chat_id, connection).await?;
 
     if let Some(user) = user {
-        add_run(distance, user.id, &connection).await?;
+        add_run(distance, user.id, connection).await?;
     } else {
-        create_user(user_name, chat_id, &connection).await?;
-        let user = get_user(user_name, chat_id, &connection).await?;
+        create_user(user_name, chat_id, connection).await?;
+        let user = get_user(user_name, chat_id, connection).await?;
         if let Some(user) = user {
-            add_run(distance, user.id, &connection).await?;
+            add_run(distance, user.id, connection).await?;
         } else {
             error!("Unable to add run to database.");
         }

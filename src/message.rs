@@ -50,12 +50,12 @@ struct ListRunTemplate<'a> {
 
 pub fn list_runs(runs: Option<Vec<Run>>) -> String {
     if let Some(runs) = runs {
-        let run_displays: Vec<RunDisplay> = runs.into_iter().map(|run| RunDisplay(run)).collect();
+        let run_displays: Vec<RunDisplay> = runs.into_iter().map(RunDisplay).collect();
         let run_template = ListRunTemplate {
             runs: &run_displays,
         };
 
-        format!("{}", run_template.render().unwrap())
+        run_template.render().unwrap().to_string()
     } else {
         "No runs in database.".into()
     }
@@ -71,7 +71,7 @@ pub fn list_users(users: Option<Vec<User>>) -> String {
     if let Some(users) = users {
         let user_template = ListUserTemplate { users: &users };
 
-        format!("{}", user_template.render().unwrap())
+        user_template.render().unwrap().to_string()
     } else {
         "No users in database.".into()
     }
@@ -87,7 +87,7 @@ pub fn display_tally(scores: Option<Vec<Score>>) -> String {
     if let Some(scores) = scores {
         let tally_template = ListTallyTemplate { scores: &scores };
 
-        format!("{}", tally_template.render().unwrap())
+        tally_template.render().unwrap().to_string()
     } else {
         "Cannot generate tally.".into()
     }
