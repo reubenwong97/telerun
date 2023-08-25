@@ -18,18 +18,6 @@ pub async fn create_user(user_name: &str, chat_id: ChatId, connection: &PgPool) 
     Ok(())
 }
 
-pub async fn delete_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<()> {
-    sqlx::query!(
-        "DELETE FROM users WHERE chat_id = $1 AND user_name = $2",
-        chat_id.to_string(),
-        user_name
-    )
-    .execute(connection)
-    .await?;
-
-    Ok(())
-}
-
 async fn get_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<Option<User>> {
     let user: Option<User> = sqlx::query_as!(
         User,

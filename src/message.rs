@@ -1,4 +1,4 @@
-use crate::models::{Run, User};
+use crate::models::{Run, Score, User};
 use askama::Template;
 use std::fmt;
 use std::ops;
@@ -36,6 +36,12 @@ impl fmt::Display for User {
     }
 }
 
+impl fmt::Display for Score {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.user_name, self.medals, self.distance)
+    }
+}
+
 #[derive(Template)]
 #[template(path = "list_runs.j2")]
 struct ListRunTemplate<'a> {
@@ -68,6 +74,22 @@ pub fn list_users(users: Option<Vec<User>>) -> String {
         format!("{}", user_template.render().unwrap())
     } else {
         "No users in database.".into()
+    }
+}
+
+#[derive(Template)]
+#[template(path = "list_tally.j2")]
+struct ListTallyTemplate<'a> {
+    scores: &'a Vec<Score>,
+}
+
+pub fn display_tally(scores: Option<Vec<Score>>) -> String {
+    if let Some(scores) = scores {
+        let tally_template = ListTallyTemplate { scores: &scores };
+
+        format!("{}", tally_template.render().unwrap())
+    } else {
+        "Cannot generate tally.".into()
     }
 }
 

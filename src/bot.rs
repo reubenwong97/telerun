@@ -1,6 +1,6 @@
 use crate::{
     database::*,
-    message::{list_runs, list_users},
+    message::{display_tally, list_runs, list_users},
 };
 use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
@@ -52,9 +52,9 @@ enum Command {
     )]
     Add { distance: f32, user_name: String },
     #[command(description = "Edit data for a run.", parse_with = "split")]
-    Edit { run_id: u32, distance: f32 },
+    Edit { run_id: i32, distance: f32 },
     #[command(description = "Remove a run from database.")]
-    Delete { run_id: u32 },
+    Delete { run_id: i32 },
     #[command(description = "Tallies current medals and distances.")]
     Tally,
     #[command(description = "Lists recent runs. Number of runs to display must be specified.")]
@@ -68,47 +68,86 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
                 .await?;
         }
         Command::Show => {
-            let users = get_users_in_chat(msg.chat.id, &db_connection)
-                .await
-                .expect("Unable to retrieve users registered with telerunbot wihtin chat.");
-            let show_message = list_users(users);
-            bot.send_message(msg.chat.id, show_message).await?;
+            let users = get_users_in_chat(msg.chat.id, &db_connection).await;
+            if let Ok(users) = users {
+                let show_message = list_users(users);
+                bot.send_message(msg.chat.id, show_message)
+                    .await
+                    .map_err(|error| error!("Unable to send Show message: {:?}", error))
+                    .ok();
+            } else {
+                error!("Unable to retrieve items required for Show.");
+            }
         }
         Command::Add {
             distance,
             user_name,
         } => {
-            add_run_wrapper(distance, user_name.as_str(), msg.chat.id, &db_connection)
+            let add_result =
+                add_run_wrapper(distance, user_name.as_str(), msg.chat.id, &db_connection).await;
+            if let Ok(_) = add_result {
+                bot.send_message(
+                    msg.chat.id,
+                    format!("{} ran {}km added to database.", user_name, distance),
+                )
                 .await
-                .expect("Unable to add run to database.");
-            bot.send_message(
-                msg.chat.id,
-                format!("{} ran {}km added to database.", user_name, distance),
-            )
-            .await?;
+                .map_err(|error| error!("Unable to send Add message: {:?}", error))
+                .ok();
+            } else {
+                error!("Unable to Add run information.");
+            }
         }
         Command::Edit { run_id, distance } => {
-            bot.send_message(msg.chat.id, "Edit".to_string()).await?;
+            let update_outcome = update_run(run_id, distance, &db_connection).await;
+            if let Ok(_) = update_outcome {
+                bot.send_message(
+                    msg.chat.id,
+                    format!(
+                        "Run {} successfully updated with distance {}km.",
+                        run_id, distance
+                    ),
+                )
+                .await
+                .map_err(|error| error!("Unable to send update message: {:?}", error))
+                .ok();
+            } else {
+                error!("Unable to update database entry for run_id: {}", run_id);
+            }
         }
         Command::Delete { run_id } => {
-            bot.send_message(msg.chat.id, "Delete".to_string()).await?;
+            let delete_outcome = delete_run(run_id, &db_connection).await;
+            if let Ok(_) = delete_outcome {
+                bot.send_message(msg.chat.id, format!("Run {} successfully deleted!", run_id))
+                    .await
+                    .map_err(|error| error!("Unable to send delete message: {:?}", error))
+                    .ok();
+            } else {
+                error!("Unable to delete entry from database.");
+            }
         }
         Command::Tally => {
-            let tally = get_tally(msg.chat.id, &db_connection)
-                .await
-                .expect("Failed to retrieve tallies.");
-            if let Some(tally) = tally {
-                // do something
+            let tally = get_tally(msg.chat.id, &db_connection).await;
+            if let Ok(tally) = tally {
+                let tally_message = display_tally(tally);
+                bot.send_message(msg.chat.id, tally_message)
+                    .await
+                    .map_err(|err| error!("Unable to send Tally message: {:?}", err))
+                    .ok();
+            } else {
+                error!("Unable to retrieve tally from database.");
             }
-            bot.send_message(msg.chat.id, "No scores are available!")
-                .await?;
         }
         Command::List { limit } => {
-            let runs = get_runs(msg.chat.id, limit.into(), &db_connection)
-                .await
-                .expect("Unable to retrieve runs.");
-            let run_message = list_runs(runs);
-            bot.send_message(msg.chat.id, run_message).await?;
+            let runs = get_runs(msg.chat.id, limit.into(), &db_connection).await;
+            if let Ok(runs) = runs {
+                let run_message = list_runs(runs);
+                bot.send_message(msg.chat.id, run_message)
+                    .await
+                    .map_err(|err| error!("Unable to send List message: {:?}", err))
+                    .ok();
+            } else {
+                error!("Unable to retrieve runs from database.");
+            }
         }
     }
     Ok(())
