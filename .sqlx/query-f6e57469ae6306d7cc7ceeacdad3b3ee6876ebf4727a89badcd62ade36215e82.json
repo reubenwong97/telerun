@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_name, COUNT(*), SUM(distance)\n            FROM runs\n            JOIN users ON users.id = runs.user_id\n            WHERE user_id = ANY($1)\n            GROUP BY user_name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "sum",
+        "type_info": "Float4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "f6e57469ae6306d7cc7ceeacdad3b3ee6876ebf4727a89badcd62ade36215e82"
+}
