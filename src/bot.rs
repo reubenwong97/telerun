@@ -4,6 +4,7 @@ use crate::{
 };
 use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
+use tracing::error;
 
 pub struct BotService {
     pub bot: Bot,

@@ -1,6 +1,7 @@
 use crate::models::{Run, Score, User};
 use sqlx::PgPool;
 use teloxide::types::ChatId;
+use tracing::error;
 
 type DBResult<T> = Result<T, sqlx::Error>;
 
