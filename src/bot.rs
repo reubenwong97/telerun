@@ -1,3 +1,7 @@
+//! Bot services.
+//!
+//! The shuttle_runtime for the BotService is defined here, which
+//! binds itself to the `SocketAddr` provided by shuttle.
 use crate::{
     database::*,
     message::{display_tally, list_runs, list_users},
@@ -6,11 +10,15 @@ use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use tracing::error;
 
+/// Encapsulate the BotService.
 pub struct BotService {
+    /// Teloxide Bot.
     pub bot: Bot,
+    /// Database connection.
     pub postgres: PgPool,
 }
 
+/// Required implementation of the `shuttle_runtime::Service` trait for `BotService`.
 #[shuttle_runtime::async_trait]
 impl shuttle_runtime::Service for BotService {
     async fn bind(self, _addr: std::net::SocketAddr) -> Result<(), shuttle_runtime::Error> {
@@ -23,7 +31,11 @@ impl shuttle_runtime::Service for BotService {
     }
 }
 
+/// impl block for `BotService`.
 impl BotService {
+    /// Clones `bot` and `db_connection` before passing these over to `Command`, also
+    /// defined within teloxide. It parses incoming commands, matches them and
+    /// hands them over to the `answer` methold.
     async fn start(&self) -> Result<(), shuttle_runtime::CustomError> {
         let bot = self.bot.clone();
         let db_connection = self.postgres.clone();
@@ -37,6 +49,7 @@ impl BotService {
     }
 }
 
+/// Enumeration of commands accepted by the bot.
 #[derive(BotCommands, Clone)]
 #[command(
     rename_rule = "lowercase",

@@ -1,3 +1,4 @@
+/// Module for database operations.
 use crate::models::{Run, Score, User};
 use sqlx::PgPool;
 use teloxide::types::ChatId;
