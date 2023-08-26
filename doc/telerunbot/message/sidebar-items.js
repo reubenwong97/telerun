@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["display_tally","list_runs","list_users"],"struct":["ListRunTemplate","ListTallyTemplate","ListUserTemplate","RunDisplay"]};

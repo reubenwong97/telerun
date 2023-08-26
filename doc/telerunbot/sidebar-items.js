@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["__shuttle_shuttle_main","loader","main"],"mod":["bot","database","message","models"]};

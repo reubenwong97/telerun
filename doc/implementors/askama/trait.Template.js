@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"telerunbot":[["impl&lt;'a&gt; Template for <a class=\"struct\" href=\"telerunbot/message/struct.ListTallyTemplate.html\" title=\"struct telerunbot::message::ListTallyTemplate\">ListTallyTemplate</a>&lt;'a&gt;"],["impl&lt;'a&gt; Template for <a class=\"struct\" href=\"telerunbot/message/struct.ListRunTemplate.html\" title=\"struct telerunbot::message::ListRunTemplate\">ListRunTemplate</a>&lt;'a&gt;"],["impl&lt;'a&gt; Template for <a class=\"struct\" href=\"telerunbot/message/struct.ListUserTemplate.html\" title=\"struct telerunbot::message::ListUserTemplate\">ListUserTemplate</a>&lt;'a&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
