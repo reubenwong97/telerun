@@ -120,9 +120,9 @@ mod tests {
         let render = list_runs(Some(runs));
         // TODO: i actually dont want this kind of html templates anyway
         let ans = "
-  1. 1 1 1970-01-01 00:01:01 1
+1. 1 1 1970-01-01 00:01:01 1
 
-  2. 2 2 1970-01-01 00:01:22 2
+2. 2 2 1970-01-01 00:01:22 2
 ";
         assert_eq!(render, ans);
     }
@@ -151,9 +151,9 @@ mod tests {
         ];
         let render = list_users(Some(users));
         let ans = "
-  1. 1 meme
+1. 1 meme
 
-  2. 2 youyou
+2. 2 youyou
 ";
         assert_eq!(render, ans);
     }
