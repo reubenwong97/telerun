@@ -1,17 +1,29 @@
-use dotenv::dotenv;
-use teloxide::{dispatching::dialogue::InMemStorage, prelude::*};
+mod bot;
+mod database;
+mod message;
+mod models;
 
-type MyDialogue = Dialogue<State, InMemStorage<State>>;
-type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
+use bot::BotService;
+use shuttle_secrets::SecretStore;
+use sqlx::PgPool;
+use teloxide::prelude::*;
 
-#[derive(Clone, Default)]
-pub enum State {
-    #[default]
-    Start,
-}
+#[shuttle_runtime::main]
+async fn shuttle_main(
+    #[shuttle_secrets::Secrets] secrets: SecretStore,
+    #[shuttle_shared_db::Postgres] postgres: PgPool,
+) -> Result<BotService, shuttle_runtime::Error> {
+    sqlx::migrate!()
+        .run(&postgres)
+        .await
+        .expect("ERROR: Could not carry out migrations!");
 
-fn main() {
-    dotenv().ok(); // Load env variables
+    let teloxide_key = secrets
+        .get("TELOXIDE_TOKEN")
+        .expect("TELOXIDE_TOKEN needs to be set.");
 
-    let telebot_api_token = std::env::var("TELOXIDE_TOKEN").expect("TELOXIDE_TOKEN must set.");
+    Ok(BotService {
+        bot: Bot::new(teloxide_key),
+        postgres,
+    })
 }
