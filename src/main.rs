@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 //! Telegram bot for a running contest between friends.
 //!
 //! Implements a telegram bot hosted on shuttle.rs (subject to change).
