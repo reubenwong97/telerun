@@ -1,10 +1,20 @@
+//! Database operations.
+//!
+//! [sqlx](https://docs.rs/sqlx/latest/sqlx/) is used to interact with the
+//! Postgresql database. Macros are used to check queries against the
+//! database at compile time.
 use crate::models::{Run, Score, User};
 use sqlx::PgPool;
 use teloxide::types::ChatId;
 use tracing::error;
 
+/// Convenience type to wrap a generic `Ok` and `sqlx::Error`.
 type DBResult<T> = Result<T, sqlx::Error>;
 
+/// Creates a user in users table.
+///
+/// Users are tied to the `chat_id` that the message came from
+/// and the `user_name` input. This combination must be unique.
 pub async fn create_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<()> {
     sqlx::query!(
         "INSERT INTO users (chat_id, user_name) 
@@ -19,6 +29,9 @@ pub async fn create_user(user_name: &str, chat_id: ChatId, connection: &PgPool) 
     Ok(())
 }
 
+/// Retrieves a user.
+///
+/// Fetches user information based on `(user_name, chat_id)`.
 async fn get_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<Option<User>> {
     let user: Option<User> = sqlx::query_as!(
         User,
@@ -34,6 +47,9 @@ async fn get_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBRe
     Ok(user)
 }
 
+/// Fetchers users in a chat.
+///
+/// Retrieves users in a chat from `ChatId`.
 pub async fn get_users_in_chat(
     chat_id: ChatId,
     connection: &PgPool,
@@ -61,7 +77,19 @@ pub async fn get_users_in_chat(
     }
 }
 
-// TODO: refactor in the future
+/// Wrapper for adding run data.
+///
+/// # Arguments
+/// * `distance` - Distance run in km
+/// * `user_name` - Name user wishes to tie the run to.
+/// * `chat_id` - Unique ID identifying the chat, this comes from Telegram.
+///
+/// # Remarks
+///
+/// Due to design flaws, we first check whether that user has
+/// added a run before. If not, we need to first create that user.
+/// Afterwards, we run `get_user` again to retrieve its `user_id`.
+/// Following which, we then actually add the run to the database.
 pub async fn add_run_wrapper(
     distance: f32,
     user_name: &str,
@@ -85,6 +113,9 @@ pub async fn add_run_wrapper(
     Ok(())
 }
 
+/// Adds run data.
+///
+/// Performs the actual database update for adding run data.
 async fn add_run(distance: f32, user_id: i32, connection: &PgPool) -> DBResult<()> {
     sqlx::query!(
         "INSERT INTO runs (distance, user_id)
@@ -99,6 +130,9 @@ async fn add_run(distance: f32, user_id: i32, connection: &PgPool) -> DBResult<(
     Ok(())
 }
 
+/// Fetches runs fromt the chat.
+///
+/// `limit` must be specified or the `answer` cannot match the enum.
 pub async fn get_runs(
     chat_id: ChatId,
     limit: i64,
@@ -137,6 +171,7 @@ pub async fn get_runs(
     }
 }
 
+/// Updates a certain run by id.
 pub async fn update_run(run_id: i32, distance: f32, connection: &PgPool) -> DBResult<()> {
     sqlx::query!(
         "UPDATE runs
@@ -151,6 +186,7 @@ pub async fn update_run(run_id: i32, distance: f32, connection: &PgPool) -> DBRe
     Ok(())
 }
 
+/// Deletes a run by id.
 pub async fn delete_run(run_id: i32, connection: &PgPool) -> DBResult<()> {
     sqlx::query!(
         "DELETE FROM runs
@@ -163,6 +199,7 @@ pub async fn delete_run(run_id: i32, connection: &PgPool) -> DBResult<()> {
     Ok(())
 }
 
+/// Aggregates runs into a tally (`Vec<Score>`)
 pub async fn get_tally(chat_id: ChatId, connection: &PgPool) -> DBResult<Option<Vec<Score>>> {
     let users = get_users_in_chat(chat_id, connection).await?;
 

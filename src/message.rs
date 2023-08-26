@@ -1,10 +1,18 @@
+//! Templating and message preparation.
+//!
+//! This module reads in Rust-native objects and renders
+//! them as `String`s using [askama](https://crates.io/crates/askama/0.7.2)
+//! as the templating engine.
+
 use crate::models::{Run, Score, User};
 use askama::Template;
 use std::fmt;
 use std::ops;
 
+/// NewType implementation so that Display can be implemented for it.
 struct RunDisplay(Run);
 
+/// Deref is implemented so that accessing `Run`'s contents is easier.
 impl ops::Deref for RunDisplay {
     type Target = Run;
 
@@ -42,12 +50,19 @@ impl fmt::Display for Score {
     }
 }
 
+/// Struct Run display.
 #[derive(Template)]
 #[template(path = "list_runs.j2")]
 struct ListRunTemplate<'a> {
+    /// Reference to `runs` for askama to access.
     runs: &'a Vec<RunDisplay>,
 }
 
+/// Displays runs fetched from database.
+///
+/// Function takes in an `Option` and will check if any records have
+/// been retrieved, else it will output that there are no runs
+/// stored in the database.
 pub fn list_runs(runs: Option<Vec<Run>>) -> String {
     if let Some(runs) = runs {
         let run_displays: Vec<RunDisplay> = runs.into_iter().map(RunDisplay).collect();
@@ -61,12 +76,19 @@ pub fn list_runs(runs: Option<Vec<Run>>) -> String {
     }
 }
 
+/// Struct User display.
 #[derive(Template)]
 #[template(path = "list_users.j2")]
 struct ListUserTemplate<'a> {
+    /// Reference to `users` for askama to access.
     users: &'a Vec<User>,
 }
 
+/// Displays users fetched from database.
+///
+/// Function takes in an `Option` and will check if any records have
+/// been retrieved, else it will output that there are no users
+/// stored in the database.
 pub fn list_users(users: Option<Vec<User>>) -> String {
     if let Some(users) = users {
         let user_template = ListUserTemplate { users: &users };
@@ -77,12 +99,19 @@ pub fn list_users(users: Option<Vec<User>>) -> String {
     }
 }
 
+/// Struct Tally display.
 #[derive(Template)]
 #[template(path = "list_tally.j2")]
 struct ListTallyTemplate<'a> {
+    /// Reference to `scores` for askama to access.
     scores: &'a Vec<Score>,
 }
 
+/// Displays score aggregates fetched from database.
+///
+/// Function takes in an `Option` and will check if any records have
+/// been retrieved, else it will output that there the tally
+/// cannot be generated.
 pub fn display_tally(scores: Option<Vec<Score>>) -> String {
     if let Some(scores) = scores {
         let tally_template = ListTallyTemplate { scores: &scores };

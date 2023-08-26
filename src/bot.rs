@@ -1,3 +1,7 @@
+//! Bot services.
+//!
+//! The shuttle_runtime for the BotService is defined here, which
+//! binds itself to the `SocketAddr` provided by shuttle.
 use crate::{
     database::*,
     message::{display_tally, list_runs, list_users},
@@ -6,11 +10,15 @@ use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use tracing::error;
 
+/// Encapsulate the BotService.
 pub struct BotService {
+    /// Teloxide Bot.
     pub bot: Bot,
+    /// Database connection.
     pub postgres: PgPool,
 }
 
+/// Required implementation of the `shuttle_runtime::Service` trait for `BotService`.
 #[shuttle_runtime::async_trait]
 impl shuttle_runtime::Service for BotService {
     async fn bind(self, _addr: std::net::SocketAddr) -> Result<(), shuttle_runtime::Error> {
@@ -23,7 +31,11 @@ impl shuttle_runtime::Service for BotService {
     }
 }
 
+/// impl block for `BotService`.
 impl BotService {
+    /// Clones `bot` and `db_connection` before passing these over to `Command`, also
+    /// defined within teloxide. It parses incoming commands, matches them and
+    /// hands them over to the `answer` methold.
     async fn start(&self) -> Result<(), shuttle_runtime::CustomError> {
         let bot = self.bot.clone();
         let db_connection = self.postgres.clone();
@@ -37,31 +49,62 @@ impl BotService {
     }
 }
 
+/// Enumeration of commands accepted by the bot.
 #[derive(BotCommands, Clone)]
 #[command(
     rename_rule = "lowercase",
     description = "The following commands are supported:"
 )]
 enum Command {
-    #[command(description = "display this text")]
+    /// Matched to `/help` -> displays commands and their documentation.
+    #[command(description = "Display this text. Usage: /help")]
     Help,
-    #[command(description = "Show users registered on telerun within the chat.")]
+    #[command(description = "Show users registered on telerun within the chat. Usage: /show")]
+    /// Matched to `/show` -> displays users within chat.
     Show,
+    /// Matched to `/add <distance> <user_name>` -> creates users in db if not present,
+    /// then adds run data to runs table.
     #[command(
-        description = "Add run data to database. Format is /add %distance (km)% %username%",
+        description = "Add run data to database. Usage: /add <distance> <user_name>",
         parse_with = "split"
     )]
-    Add { distance: f32, user_name: String },
-    #[command(description = "Edit data for a run.", parse_with = "split")]
-    Edit { run_id: i32, distance: f32 },
-    #[command(description = "Remove a run from database.")]
-    Delete { run_id: i32 },
-    #[command(description = "Tallies current medals and distances.")]
+    Add {
+        /// Distance run in km
+        distance: f32,
+        /// Name of user to tie the run to. Must be unique.
+        user_name: String,
+    },
+    /// Matched to `/edit <run_id> <distance>` -> edits stored run data.
+    #[command(
+        description = "Edit data for a run. Usage: /edit <run_id> <distance>",
+        parse_with = "split"
+    )]
+    Edit {
+        /// Id of run as stored in runs table.
+        run_id: i32,
+        /// Corrected distance run in km.
+        distance: f32,
+    },
+    /// Matched to `/delete <run_id>` -> removes a certain run from database.
+    #[command(description = "Remove a run from database. Usage: /delete <run_id>")]
+    Delete {
+        /// Id of run to remove from table.
+        run_id: i32,
+    },
+    /// Matched to `/tally` -> sends score board as message through Telegram.
+    #[command(description = "Tallies current medals and distances. Usage: /tally")]
     Tally,
-    #[command(description = "Lists recent runs. Number of runs to display must be specified.")]
-    List { limit: u32 },
+    /// Matched to `/list <limit>` -> displays runs registered by the group chat, subject to a limit.
+    #[command(
+        description = "Lists recent runs. Number of runs to display must be specified. Usage: /list <num_runs_to_show>"
+    )]
+    List {
+        /// Limit to query from db.
+        limit: u32,
+    },
 }
 
+/// Function used for handling various commands matched.
 async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> ResponseResult<()> {
     match cmd {
         Command::Help => {
