@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+#![warn(clippy::missing_docs_in_private_items)]
 
 //! Telegram bot for a running contest between friends.
 //!
