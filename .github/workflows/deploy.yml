@@ -1,0 +1,17 @@
+name: Shuttle Deploy
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shuttle-hq/deploy-action@main
+        with:
+          deploy-key: ${{ secrets.SHUTTLE_DEPLOY_KEY }}
+          secrets: |
+            TELOXIDE_TOKEN = '${{ secrets.TELOXIDE_TOKEN }}'
