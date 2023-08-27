@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, chat_id, user_name\n    FROM users\n    WHERE user_name = $1 AND chat_id = $2",
+  "query": "SELECT id, telegram_userid, chat_id, user_name\n    FROM users\n    WHERE user_name = $1 AND telegram_userid = $2 AND chat_id = $3",
   "describe": {
     "columns": [
       {
@@ -10,11 +10,16 @@
       },
       {
         "ordinal": 1,
+        "name": "telegram_userid",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
         "name": "chat_id",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "user_name",
         "type_info": "Varchar"
       }
@@ -22,14 +27,16 @@
     "parameters": {
       "Left": [
         "Text",
+        "Int8",
         "Text"
       ]
     },
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "fa077bf85599d24f2961d5ab08221ba5ccfb2f24b16be8717e9c6c99e27a004a"
+  "hash": "5a3d0c9d6fc2abb00f55f0815326ab31fcabe74adf4eb3d6d20af3ca7d6e54dd"
 }

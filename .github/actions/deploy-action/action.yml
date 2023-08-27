@@ -1,0 +1,79 @@
+name: Shuttle Deploy
+description: Deploy to Shuttle
+
+inputs:
+  deploy-key:
+    description: 'The key found at "https://www.shuttle.rs/login"'
+    required: true
+  cargo-shuttle-version:
+    description: "Version of cargo-shuttle"
+    required: false
+    default: ""
+  working-directory:
+    description: "The directory which includes the `Cargo.toml`"
+    required: false
+    default: "."
+  name:
+    description: "Name of the project (overrides crate name & Shuttle.toml)"
+    required: false
+    default: ""
+  allow-dirty:
+    description: "Allow uncommitted changes to be deployed"
+    required: false
+    default: "false"
+  no-test:
+    description: "Don't run tests before deployment"
+    required: false
+    default: "false"
+  secrets:
+    description: |
+      Content of the `Secrets.toml` file, if any.
+      Use multiline text with `|` in case of multiple secrets
+    required: false
+    default: ""
+  keep-alive:
+    description: Whether service should be kept alive.
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+      # check out repo if not done already
+    - id: check-repo-is-not-initialized
+      run: echo "remote-url=$( git config --get remote.origin.url )" >> $GITHUB_OUTPUT
+      shell: bash
+    - uses: actions/checkout@v3
+      if: ${{ !contains(steps.check-repo-is-not-initialized.outputs.remote-url, github.repository) }}
+
+      # install with cargo-binstall
+    - name: Install cargo-binstall
+      run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+      shell: bash
+    - name: Install cargo-shuttle
+      if: ${{ inputs.cargo-shuttle-version == '' }}
+      run: cargo binstall -y --locked cargo-shuttle
+      shell: bash
+    - name: Install cargo-shuttle ${{ inputs.cargo-shuttle-version }}
+      if: ${{ inputs.cargo-shuttle-version != '' }}
+      run: cargo binstall -y --locked cargo-shuttle@${{ inputs.cargo-shuttle-version }}
+      shell: bash
+
+    - name: Create secret file
+      if: ${{ inputs.secrets != '' }}
+      run: echo "${{ inputs.secrets }}" > Secrets.toml
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+
+    - name: Deploy to Shuttle
+      run: |
+        cargo shuttle deploy \
+        $(if [ "${{ inputs.name }}" != "" ]; then echo "--name ${{ inputs.name }}"; fi) \
+        $(if [ "${{ inputs.allow-dirty }}" != "false" ]; then echo --allow-dirty; fi) \
+        $(if [ "${{ inputs.no-test }}" != "false" ]; then echo --no-test; fi) \
+        $(if [ "${{ inputs.keep-alive }}" != "false" ]; then echo --idle-minutes 0; fi) \
+        | awk '!/Database URI.*?$/'
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        SHUTTLE_API_KEY: ${{ inputs.deploy-key }}
+      shell: bash

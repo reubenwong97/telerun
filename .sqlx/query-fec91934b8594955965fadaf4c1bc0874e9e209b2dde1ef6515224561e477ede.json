@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users (telegram_userid, chat_id, user_name) \n        VALUES ($1, $2, $3)\n        ON CONFLICT (telegram_userid, chat_id, user_name) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fec91934b8594955965fadaf4c1bc0874e9e209b2dde1ef6515224561e477ede"
+}

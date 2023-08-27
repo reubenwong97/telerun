@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE runs\n        SET distance = $1\n        WHERE id = $2",
+  "query": "UPDATE runs\n                SET distance = $1\n                WHERE id = $2",
   "describe": {
     "columns": [],
     "parameters": {
@@ -11,5 +11,5 @@
     },
     "nullable": []
   },
-  "hash": "6100bc13e5ae09fa0ee7de24c9d017da6761440bb56f4de704c6b536eb42c6a0"
+  "hash": "ef445b2437974493992e90be55b66135a514cfabb964886617634ab0eec50494"
 }
