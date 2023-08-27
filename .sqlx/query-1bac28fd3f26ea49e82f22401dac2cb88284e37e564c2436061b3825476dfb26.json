@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_name, COUNT(*), SUM(distance)\n            FROM runs\n            JOIN users ON users.id = runs.user_id\n            WHERE user_id = ANY($1)\n            GROUP BY user_name",
+  "query": "SELECT user_name, COUNT(*), SUM(distance) as total_ran\n            FROM runs\n            JOIN users ON users.id = runs.user_id\n            WHERE user_id = ANY($1)\n            GROUP BY user_name\n            ORDER BY total_ran DESC",
   "describe": {
     "columns": [
       {
@@ -15,7 +15,7 @@
       },
       {
         "ordinal": 2,
-        "name": "sum",
+        "name": "total_ran",
         "type_info": "Float4"
       }
     ],
@@ -30,5 +30,5 @@
       null
     ]
   },
-  "hash": "f6e57469ae6306d7cc7ceeacdad3b3ee6876ebf4727a89badcd62ade36215e82"
+  "hash": "1bac28fd3f26ea49e82f22401dac2cb88284e37e564c2436061b3825476dfb26"
 }
