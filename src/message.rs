@@ -169,11 +169,13 @@ mod tests {
         let users = vec![
             User {
                 id: 1,
+                telegram_userid: 1,
                 chat_id: "chat1".into(),
                 user_name: "meme".into(),
             },
             User {
                 id: 2,
+                telegram_userid: 2,
                 chat_id: "chat1".into(),
                 user_name: "youyou".into(),
             },

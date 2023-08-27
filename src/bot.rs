@@ -62,17 +62,12 @@ enum Command {
     #[command(description = "Show users registered on telerun within the chat. Usage: /show")]
     /// Matched to `/show` -> displays users within chat.
     Show,
-    /// Matched to `/add <distance> <user_name>` -> creates users in db if not present,
+    /// Matched to `/add <distance>` -> creates users in db if not present,
     /// then adds run data to runs table.
-    #[command(
-        description = "Add run data to database. Usage: /add <distance> <user_name>",
-        parse_with = "split"
-    )]
+    #[command(description = "Add run data to database. Usage: /add <distance>")]
     Add {
         /// Distance run in km
         distance: f32,
-        /// Name of user to tie the run to. Must be unique.
-        user_name: String,
     },
     /// Matched to `/edit <run_id> <distance>` -> edits stored run data.
     #[command(
@@ -123,50 +118,71 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db_connection: PgPool) -> 
                 error!("Unable to retrieve items required for Show.");
             }
         }
-        Command::Add {
-            distance,
-            user_name,
-        } => {
-            let add_result =
-                add_run_wrapper(distance, user_name.as_str(), msg.chat.id, &db_connection).await;
-            if add_result.is_ok() {
-                bot.send_message(
-                    msg.chat.id,
-                    format!("{} ran {}km added to database.", user_name, distance),
-                )
-                .await
-                .map_err(|error| error!("Unable to send Add message: {:?}", error))
-                .ok();
+        Command::Add { distance } => {
+            let telegram_user = msg.from();
+            if let Some(user) = telegram_user {
+                let user_name = &user.username;
+                if let Some(user_name) = user_name {
+                    let add_result = add_run_wrapper(
+                        distance,
+                        user_name.as_str(),
+                        user.id,
+                        msg.chat.id,
+                        &db_connection,
+                    )
+                    .await;
+                    if add_result.is_ok() {
+                        bot.send_message(
+                            msg.chat.id,
+                            format!("{} ran {}km added to database.", user_name, distance),
+                        )
+                        .await
+                        .map_err(|error| error!("Unable to send Add message: {:?}", error))
+                        .ok();
+                    } else {
+                        error!("Unable to Add run information.");
+                    }
+                } else {
+                    error!("Unable to retrieve username information from Telegram.");
+                }
             } else {
-                error!("Unable to Add run information.");
+                error!("Unable to retrieve user from message.");
             }
         }
         Command::Edit { run_id, distance } => {
-            let update_outcome = update_run(run_id, distance, &db_connection).await;
-            if update_outcome.is_ok() {
-                bot.send_message(
-                    msg.chat.id,
-                    format!(
-                        "Run {} successfully updated with distance {}km.",
-                        run_id, distance
-                    ),
-                )
-                .await
-                .map_err(|error| error!("Unable to send update message: {:?}", error))
-                .ok();
+            let telegram_user = msg.from();
+            if let Some(user) = telegram_user {
+                let update_outcome = update_run(run_id, user.id, distance, &db_connection).await;
+                if update_outcome.is_ok() {
+                    bot.send_message(
+                        msg.chat.id,
+                        format!(
+                            "Run {} successfully updated with distance {}km.",
+                            run_id, distance
+                        ),
+                    )
+                    .await
+                    .map_err(|error| error!("Unable to send update message: {:?}", error))
+                    .ok();
+                } else {
+                    error!("Unable to update database entry for run_id: {}", run_id);
+                }
             } else {
-                error!("Unable to update database entry for run_id: {}", run_id);
+                error!("Unable to retrieve user information from Telegram.");
             }
         }
         Command::Delete { run_id } => {
-            let delete_outcome = delete_run(run_id, &db_connection).await;
-            if delete_outcome.is_ok() {
-                bot.send_message(msg.chat.id, format!("Run {} successfully deleted!", run_id))
-                    .await
-                    .map_err(|error| error!("Unable to send delete message: {:?}", error))
-                    .ok();
-            } else {
-                error!("Unable to delete entry from database.");
+            let telegram_user = msg.from();
+            if let Some(user) = telegram_user {
+                let delete_outcome = delete_run(run_id, user.id, &db_connection).await;
+                if delete_outcome.is_ok() {
+                    bot.send_message(msg.chat.id, format!("Run {} successfully deleted!", run_id))
+                        .await
+                        .map_err(|error| error!("Unable to send delete message: {:?}", error))
+                        .ok();
+                } else {
+                    error!("Unable to delete entry from database.");
+                }
             }
         }
         Command::Tally => {

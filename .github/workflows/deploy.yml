@@ -10,7 +10,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: shuttle-hq/deploy-action@main
+      - uses: ./.github/actions/deploy-action
         with:
           deploy-key: ${{ secrets.SHUTTLE_DEPLOY_KEY }}
           secrets: |

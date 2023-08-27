@@ -10,6 +10,11 @@ use sqlx::types::chrono;
 pub struct User {
     /// User id
     pub id: i32,
+    /// User id as seen from Telegram
+    /// PostgreSQL does not natively support u64 values,
+    /// and thus we will attempt to cast the values from Telegram
+    /// as i64 first before storing in DB.
+    pub telegram_userid: i64,
     /// Id of telegram chat
     pub chat_id: String,
     /// Self-specified username
