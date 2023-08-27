@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.id\n        FROM runs r\n        JOIN users u on u.id = r.user_id\n        WHERE u.telegram_userid = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "361cba2a4dfed276a1a1a5285d98faf9c4bc74f27309f7f4bd590fab0f2cf9c0"
+}

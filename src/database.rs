@@ -5,8 +5,8 @@
 //! database at compile time.
 use crate::models::{Run, Score, User};
 use sqlx::PgPool;
-use teloxide::types::ChatId;
-use tracing::error;
+use teloxide::types::{ChatId, UserId};
+use tracing::{error, info};
 
 /// Convenience type to wrap a generic `Ok` and `sqlx::Error`.
 type DBResult<T> = Result<T, sqlx::Error>;
@@ -15,11 +15,17 @@ type DBResult<T> = Result<T, sqlx::Error>;
 ///
 /// Users are tied to the `chat_id` that the message came from
 /// and the `user_name` input. This combination must be unique.
-pub async fn create_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<()> {
+pub async fn create_user(
+    user_name: &str,
+    telegram_userid: UserId,
+    chat_id: ChatId,
+    connection: &PgPool,
+) -> DBResult<()> {
     sqlx::query!(
-        "INSERT INTO users (chat_id, user_name) 
-        VALUES ($1, $2)
-        ON CONFLICT (chat_id, user_name) DO NOTHING",
+        "INSERT INTO users (telegram_userid, chat_id, user_name) 
+        VALUES ($1, $2, $3)
+        ON CONFLICT (telegram_userid, chat_id, user_name) DO NOTHING",
+        telegram_userid.0 as i64,
         chat_id.to_string(),
         user_name
     )
@@ -31,14 +37,20 @@ pub async fn create_user(user_name: &str, chat_id: ChatId, connection: &PgPool) 
 
 /// Retrieves a user.
 ///
-/// Fetches user information based on `(user_name, chat_id)`.
-async fn get_user(user_name: &str, chat_id: ChatId, connection: &PgPool) -> DBResult<Option<User>> {
+/// Fetches user information based on `(user_name, telegram_userid, chat_id)`.
+async fn get_user(
+    user_name: &str,
+    telegram_userid: UserId,
+    chat_id: ChatId,
+    connection: &PgPool,
+) -> DBResult<Option<User>> {
     let user: Option<User> = sqlx::query_as!(
         User,
-        "SELECT id, chat_id, user_name
+        "SELECT id, telegram_userid, chat_id, user_name
     FROM users
-    WHERE user_name = $1 AND chat_id = $2",
+    WHERE user_name = $1 AND telegram_userid = $2 AND chat_id = $3",
         user_name,
+        telegram_userid.0 as i64,
         chat_id.to_string()
     )
     .fetch_optional(connection)
@@ -55,7 +67,7 @@ pub async fn get_users_in_chat(
     connection: &PgPool,
 ) -> DBResult<Option<Vec<User>>> {
     let users: Vec<User> = sqlx::query!(
-        "SELECT id, chat_id, user_name
+        "SELECT id, telegram_userid, chat_id, user_name
         FROM users
         WHERE chat_id = $1",
         chat_id.to_string()
@@ -65,6 +77,7 @@ pub async fn get_users_in_chat(
     .iter()
     .map(|user_row| User {
         id: user_row.id,
+        telegram_userid: user_row.telegram_userid,
         chat_id: user_row.chat_id.clone(),
         user_name: user_row.user_name.clone(),
     })
@@ -82,6 +95,8 @@ pub async fn get_users_in_chat(
 /// # Arguments
 /// * `distance` - Distance run in km
 /// * `user_name` - Name user wishes to tie the run to.
+/// * `telegram_userid` - Unique user id from Telegram. Can be retrieved
+///                       from `Message`.
 /// * `chat_id` - Unique ID identifying the chat, this comes from Telegram.
 ///
 /// # Remarks
@@ -93,16 +108,17 @@ pub async fn get_users_in_chat(
 pub async fn add_run_wrapper(
     distance: f32,
     user_name: &str,
+    telegram_userid: UserId,
     chat_id: ChatId,
     connection: &PgPool,
 ) -> DBResult<()> {
-    let user = get_user(user_name, chat_id, connection).await?;
+    let user = get_user(user_name, telegram_userid, chat_id, connection).await?;
 
     if let Some(user) = user {
         add_run(distance, user.id, connection).await?;
     } else {
-        create_user(user_name, chat_id, connection).await?;
-        let user = get_user(user_name, chat_id, connection).await?;
+        create_user(user_name, telegram_userid, chat_id, connection).await?;
+        let user = get_user(user_name, telegram_userid, chat_id, connection).await?;
         if let Some(user) = user {
             add_run(distance, user.id, connection).await?;
         } else {
@@ -172,31 +188,78 @@ pub async fn get_runs(
 }
 
 /// Updates a certain run by id.
-pub async fn update_run(run_id: i32, distance: f32, connection: &PgPool) -> DBResult<()> {
-    sqlx::query!(
-        "UPDATE runs
-        SET distance = $1
-        WHERE id = $2",
-        distance,
-        run_id,
+pub async fn update_run(
+    run_id: i32,
+    telegram_userid: UserId,
+    distance: f32,
+    connection: &PgPool,
+) -> DBResult<()> {
+    let valid_run = sqlx::query!(
+        "SELECT r.id
+        FROM runs r
+        JOIN users u on u.id = r.user_id
+        WHERE u.telegram_userid = $1",
+        telegram_userid.0 as i64,
     )
-    .execute(connection)
-    .await?;
-
-    Ok(())
+    .fetch_optional(connection)
+    .await;
+    match valid_run {
+        Ok(Some(_)) => {
+            info!("Matched run_id: {} to user_id: {}", run_id, telegram_userid);
+            sqlx::query!(
+                "UPDATE runs
+                SET distance = $1
+                WHERE id = $2",
+                distance,
+                run_id,
+            )
+            .execute(connection)
+            .await?;
+            Ok(())
+        }
+        Ok(None) => {
+            error!("No runs matched for the source user");
+            Ok(())
+        }
+        Err(error) => {
+            error!("Unable to retrieve run data: {:?}", error);
+            Err(error)
+        }
+    }
 }
 
 /// Deletes a run by id.
-pub async fn delete_run(run_id: i32, connection: &PgPool) -> DBResult<()> {
-    sqlx::query!(
-        "DELETE FROM runs
-        WHERE id = $1",
-        run_id,
+pub async fn delete_run(run_id: i32, telegram_userid: UserId, connection: &PgPool) -> DBResult<()> {
+    let valid_run = sqlx::query!(
+        "SELECT r.id
+        FROM runs r
+        JOIN users u on u.id = r.user_id
+        WHERE u.telegram_userid = $1",
+        telegram_userid.0 as i64,
     )
-    .execute(connection)
-    .await?;
-
-    Ok(())
+    .fetch_optional(connection)
+    .await;
+    match valid_run {
+        Ok(Some(_)) => {
+            info!("Matched run_id: {} to user_id: {}", run_id, telegram_userid);
+            sqlx::query!(
+                "DELETE FROM runs
+                WHERE id = $1",
+                run_id,
+            )
+            .execute(connection)
+            .await?;
+            Ok(())
+        }
+        Ok(None) => {
+            error!("No runs matched for the source user");
+            Ok(())
+        }
+        Err(error) => {
+            error!("Unable to retrieve run data: {:?}", error);
+            Err(error)
+        }
+    }
 }
 
 /// Aggregates runs into a tally (`Vec<Score>`)
