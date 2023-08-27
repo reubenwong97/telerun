@@ -1,13 +1,13 @@
-{% for score in scores %}
-{% if loop.index == 1 %}
+{% for score in scores -%}
+{% if loop.index == 1 -%}
 🥇 {{ loop.index }}. {{ score }}
-{% else if loop.index == 2 %}
+{% else if loop.index == 2 -%}
 🥈 {{ loop.index }}. {{ score }}
-{% else if loop.index == 3 %}
+{% else if loop.index == 3 -%}
 🥉 {{ loop.index }}. {{ score }}
-{% else if loop.last %}
+{% else if loop.last -%}
 🤡 {{ loop.index }}. {{ score }}
-{% else %}
-  {{ loop.index }}. {{ score }}
-{% endif %}
-{% endfor %}
+{% else -%}
+🏃 {{ loop.index }}. {{ score }}
+{% endif -%}
+{% endfor -%}

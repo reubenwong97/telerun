@@ -269,11 +269,12 @@ pub async fn get_tally(chat_id: ChatId, connection: &PgPool) -> DBResult<Option<
     if let Some(users) = users {
         let user_ids: Vec<i32> = users.iter().map(|user| user.id).collect();
         let tally = sqlx::query!(
-            "SELECT user_name, COUNT(*), SUM(distance)
+            "SELECT user_name, COUNT(*), SUM(distance) as total_ran
             FROM runs
             JOIN users ON users.id = runs.user_id
             WHERE user_id = ANY($1)
-            GROUP BY user_name",
+            GROUP BY user_name
+            ORDER BY total_ran DESC",
             &user_ids[..],
         )
         .fetch_all(connection)
@@ -284,7 +285,7 @@ pub async fn get_tally(chat_id: ChatId, connection: &PgPool) -> DBResult<Option<
             .map(|tally| Score {
                 user_name: tally.user_name.clone(),
                 medals: tally.count.unwrap() as u32,
-                distance: tally.sum.unwrap(),
+                distance: tally.total_ran.unwrap(),
             })
             .collect();
 
