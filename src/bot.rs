@@ -53,7 +53,10 @@ impl BotService {
 #[derive(BotCommands, Clone)]
 #[command(
     rename_rule = "lowercase",
-    description = "The following commands are supported:"
+    description = "Welcome to TeleRunBot! Thanks for using me, I will be helping
+to track your run progress. For issues and bug reports, please raise here: https://github.com/reubenwong97/telerun/issues.
+
+The following commands are supported:"
 )]
 enum Command {
     /// Matched to `/help` -> displays commands and their documentation.
