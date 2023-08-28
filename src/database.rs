@@ -21,7 +21,11 @@ pub async fn create_user(
     chat_id: ChatId,
     connection: &PgPool,
 ) -> DBResult<()> {
-    sqlx::query!(
+    info!(
+        "[create_user]: user_name: {}, telegram_userid: {}, chat_id: {}",
+        user_name, telegram_userid.0 as i64, chat_id.0,
+    );
+    let create_result = sqlx::query!(
         "INSERT INTO users (telegram_userid, chat_id, user_name) 
         VALUES ($1, $2, $3)
         ON CONFLICT (telegram_userid, chat_id, user_name) DO NOTHING",
@@ -30,9 +34,15 @@ pub async fn create_user(
         user_name
     )
     .execute(connection)
-    .await?;
-
-    Ok(())
+    .await;
+    // Return only needed if we want to return earlier than the last expression
+    match create_result {
+        Ok(_) => Ok(()),
+        Err(error) => {
+            error!("Unable to create user: {:?}", error);
+            Err(error)
+        }
+    } // Note: if ; is placed here, then this won't return!
 }
 
 /// Retrieves a user.
@@ -117,12 +127,20 @@ pub async fn add_run_wrapper(
     if let Some(user) = user {
         add_run(distance, user.id, connection).await?;
     } else {
-        create_user(user_name, telegram_userid, chat_id, connection).await?;
-        let user = get_user(user_name, telegram_userid, chat_id, connection).await?;
-        if let Some(user) = user {
-            add_run(distance, user.id, connection).await?;
-        } else {
-            error!("Unable to add run to database.");
+        let create_result = create_user(user_name, telegram_userid, chat_id, connection).await;
+        match create_result {
+            Ok(_) => {
+                let user = get_user(user_name, telegram_userid, chat_id, connection).await?;
+                if let Some(user) = user {
+                    add_run(distance, user.id, connection).await?;
+                } else {
+                    error!("Unable to add run to database.");
+                }
+            }
+            Err(err) => {
+                error!("Unable to create user.");
+                return Err(err);
+            }
         }
     }
 
