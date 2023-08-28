@@ -23,7 +23,7 @@ pub async fn create_user(
 ) -> DBResult<()> {
     info!(
         "[create_user]: user_name: {}, telegram_userid: {}, chat_id: {}",
-        user_name, telegram_userid.0 as i64, chat_id.0 as i64,
+        user_name, telegram_userid.0 as i64, chat_id.0,
     );
     let create_result = sqlx::query!(
         "INSERT INTO users (telegram_userid, chat_id, user_name) 
@@ -35,13 +35,14 @@ pub async fn create_user(
     )
     .execute(connection)
     .await;
+    // Return only needed if we want to return earlier than the last expression
     match create_result {
-        Ok(_) => return Ok(()),
+        Ok(_) => Ok(()),
         Err(error) => {
             error!("Unable to create user: {:?}", error);
-            return Err(error);
+            Err(error)
         }
-    };
+    } // Note: if ; is placed here, then this won't return!
 }
 
 /// Retrieves a user.
