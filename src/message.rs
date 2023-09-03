@@ -148,7 +148,8 @@ mod tests {
         ];
         let render = list_runs(Some(runs));
         // TODO: i actually dont want this kind of html templates anyway
-        let ans = "1. 1 1 1970-01-01 00:01:01 1
+        let ans = "#. RunID Distance RunTime
+1. 1 1 1970-01-01 00:01:01 1
 2. 2 2 1970-01-01 00:01:22 2
 ";
         assert_eq!(render, ans);
@@ -179,7 +180,8 @@ mod tests {
             },
         ];
         let render = list_users(Some(users));
-        let ans = "1. 1 meme
+        let ans = "#. UserID UserName
+1. 1 meme
 2. 2 youyou
 ";
         assert_eq!(render, ans);
@@ -223,7 +225,8 @@ mod tests {
             },
         ];
         let render = display_tally(Some(scores));
-        let ans = "🥇 1. reuben 5 20
+        let ans = "#. UserName Medals Distance (km)
+🥇 1. reuben 5 20
 🥈 2. milton 2 10
 🥉 3. jerrell 1 1
 🏃 4. taigy 1 0.2
