@@ -67,14 +67,16 @@ enum Command {
     Show,
     /// Matched to `/add <distance>` -> creates users in db if not present,
     /// then adds run data to runs table.
-    #[command(description = "Add run data to database. Usage: /add <distance>")]
+    #[command(
+        description = "Add run data to database. Usage: /add <distance> (in km). Example: /add 5"
+    )]
     Add {
         /// Distance run in km
         distance: f32,
     },
     /// Matched to `/edit <run_id> <distance>` -> edits stored run data.
     #[command(
-        description = "Edit data for a run. Usage: /edit <run_id> <distance>",
+        description = "Edit data for a run. Usage: /edit <run_id> <distance>. Example: /edit 3 6",
         parse_with = "split"
     )]
     Edit {
@@ -84,7 +86,9 @@ enum Command {
         distance: f32,
     },
     /// Matched to `/delete <run_id>` -> removes a certain run from database.
-    #[command(description = "Remove a run from database. Usage: /delete <run_id>")]
+    #[command(
+        description = "Remove a run from database. Usage: /delete <run_id>. Example: /delete 4"
+    )]
     Delete {
         /// Id of run to remove from table.
         run_id: i32,
@@ -94,7 +98,7 @@ enum Command {
     Tally,
     /// Matched to `/list <limit>` -> displays runs registered by the group chat, subject to a limit.
     #[command(
-        description = "Lists recent runs. Number of runs to display must be specified. Usage: /list <num_runs_to_show>"
+        description = "Lists recent runs. Number of runs to display must be specified. Usage: /list <num_runs_to_show>. Example: /list 5"
     )]
     List {
         /// Limit to query from db.
