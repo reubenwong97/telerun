@@ -1,8 +1,14 @@
 [package]
 name = "telerunbot"
-version = "0.1.0"
+version = "0.0.5"
 edition = "2021"
-publish = false
+license = "MIT"
+description = "Rust telegram bot for tracking runs."
+homepage = "https://github.com/reubenwong97/telerun"
+documentation = "https://docs.rs/telerun/"
+repository = "https://github.com/reubenwong97/telerun"
+readme = "README.md"
+publish = true
 
 [dependencies]
 log = "0.4"
@@ -10,10 +16,10 @@ pretty_env_logger = "0.4"
 shuttle-runtime = "0.24.0"
 tokio = { version = "1.26.0" }
 sqlx = { version = "0.7.1", features = [
-    "runtime-tokio-native-tls",
-    "postgres",
-    "macros",
-    "chrono",
+  "runtime-tokio-native-tls",
+  "postgres",
+  "macros",
+  "chrono",
 ] }
 teloxide = { version = "0.12.0", features = ["macros"] }
 shuttle-shared-db = { version = "0.24.0", features = ["postgres", "sqlx"] }
