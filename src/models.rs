@@ -14,7 +14,7 @@ pub struct User {
     /// PostgreSQL does not natively support u64 values,
     /// and thus we will attempt to cast the values from Telegram
     /// as i64 first before storing in DB.
-    pub telegram_userid: i64,
+    pub telegram_userid: String,
     /// Id of telegram chat
     pub chat_id: String,
     /// Self-specified username

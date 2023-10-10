@@ -87,7 +87,7 @@ pub async fn get_users_in_chat(
     .iter()
     .map(|user_row| User {
         id: user_row.id,
-        telegram_userid: user_row.telegram_userid,
+        telegram_userid: user_row.telegram_userid.clone(),
         chat_id: user_row.chat_id.clone(),
         user_name: user_row.user_name.clone(),
     })

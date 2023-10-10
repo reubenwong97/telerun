@@ -11,7 +11,7 @@
       {
         "ordinal": 1,
         "name": "telegram_userid",
-        "type_info": "Int8"
+        "type_info": "Varchar"
       },
       {
         "ordinal": 2,
@@ -27,7 +27,7 @@
     "parameters": {
       "Left": [
         "Text",
-        "Int8",
+        "Text",
         "Text"
       ]
     },
