@@ -13,5 +13,6 @@ jobs:
       - uses: shuttle-hq/deploy-action@main
         with:
           deploy-key: ${{ secrets.SHUTTLE_DEPLOY_KEY }}
+          cargo-shuttle-version: "0.24.0"
           secrets: |
             TELOXIDE_TOKEN = '${{ secrets.TELOXIDE_TOKEN }}'
