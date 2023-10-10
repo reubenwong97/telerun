@@ -1,5 +1,5 @@
 [package]
-name = "telerun"
+name = "telerunbot"
 version = "0.0.6"
 edition = "2021"
 license = "MIT"
