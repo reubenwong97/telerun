@@ -46,7 +46,11 @@ impl fmt::Display for User {
 
 impl fmt::Display for Score {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", self.user_name, self.medals, self.distance)
+        write!(
+            f,
+            "{} {}🏅 {}km",
+            self.user_name, self.medals, self.distance
+        )
     }
 }
 
@@ -147,7 +151,6 @@ mod tests {
             },
         ];
         let render = list_runs(Some(runs));
-        // TODO: i actually dont want this kind of html templates anyway
         let ans = "#. RunID Distance RunTime
 1. 1 1 1970-01-01 00:01:01 1
 2. 2 2 1970-01-01 00:01:22 2
@@ -168,13 +171,13 @@ mod tests {
         let users = vec![
             User {
                 id: 1,
-                telegram_userid: 1,
+                telegram_userid: 1.to_string(),
                 chat_id: "chat1".into(),
                 user_name: "meme".into(),
             },
             User {
                 id: 2,
-                telegram_userid: 2,
+                telegram_userid: 2.to_string(),
                 chat_id: "chat1".into(),
                 user_name: "youyou".into(),
             },
@@ -226,11 +229,11 @@ mod tests {
         ];
         let render = display_tally(Some(scores));
         let ans = "#. UserName Medals Distance (km)
-🥇 1. reuben 5 20
-🥈 2. milton 2 10
-🥉 3. jerrell 1 1
-🏃 4. taigy 1 0.2
-🤡 5. riley 2 0.1
+🥇 1. reuben 5🏅 20km
+🥈 2. milton 2🏅 10km
+🥉 3. jerrell 1🏅 1km
+🏃 4. taigy 1🏅 0.2km
+🤡 5. riley 2🏅 0.1km
 ";
         assert_eq!(render, ans);
     }
