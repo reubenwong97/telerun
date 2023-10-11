@@ -23,13 +23,15 @@ pub async fn create_user(
 ) -> DBResult<()> {
     info!(
         "[create_user]: user_name: {}, telegram_userid: {}, chat_id: {}",
-        user_name, telegram_userid.0 as i64, chat_id.0,
+        user_name,
+        telegram_userid.to_string(),
+        chat_id.0,
     );
     let create_result = sqlx::query!(
         "INSERT INTO users (telegram_userid, chat_id, user_name) 
         VALUES ($1, $2, $3)
         ON CONFLICT (telegram_userid, chat_id, user_name) DO NOTHING",
-        telegram_userid.0 as i64,
+        telegram_userid.to_string(),
         chat_id.to_string(),
         user_name
     )
@@ -60,7 +62,7 @@ async fn get_user(
     FROM users
     WHERE user_name = $1 AND telegram_userid = $2 AND chat_id = $3",
         user_name,
-        telegram_userid.0 as i64,
+        telegram_userid.to_string(),
         chat_id.to_string()
     )
     .fetch_optional(connection)
@@ -217,7 +219,7 @@ pub async fn update_run(
         FROM runs r
         JOIN users u on u.id = r.user_id
         WHERE u.telegram_userid = $1",
-        telegram_userid.0 as i64,
+        telegram_userid.to_string(),
     )
     .fetch_optional(connection)
     .await;
@@ -253,7 +255,7 @@ pub async fn delete_run(run_id: i32, telegram_userid: UserId, connection: &PgPoo
         FROM runs r
         JOIN users u on u.id = r.user_id
         WHERE u.telegram_userid = $1",
-        telegram_userid.0 as i64,
+        telegram_userid.to_string(),
     )
     .fetch_optional(connection)
     .await;
