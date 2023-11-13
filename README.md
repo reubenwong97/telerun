@@ -79,6 +79,6 @@ You can then proceed to clone the repository, making the necessary changes to `C
 TELOXIDE_TOKEN = <TELEGRAM_BOT_API_TOKEN>
 ```
 
-,where `TELEGRAM_BOT_API_TOKEN` is the API key of the telegram bot you are creating. For instructions on how to do so, please follow this [tutorial](https://core.telegram.org/bots/tutorial).
+`TELEGRAM_BOT_API_TOKEN` is the API key of the telegram bot you are creating. For instructions on how to do so, please follow this [tutorial](https://core.telegram.org/bots/tutorial).
 
 Viola! You have now hosted your own telerun bot service 🥳
