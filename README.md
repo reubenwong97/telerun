@@ -1,3 +1,6 @@
+[![Builds](https://img.shields.io/github/actions/workflow/status/reubenwong97/telerun/general.yml
+)](https://github.com/reubenwong97/telerun)
+
 # Telerunbot
 
 This project was born out of an idea from my brother - he wanted something simple to gamify workouts with friends. Therefore, I developed this telegram bot to allow them to track their runs in a leaderboard. This bot groups leaderboards by telegram chats, and each individual chat would have its own leaderboard! This allows you to use this bot among multiple friend circles - each with their own leaderboards.
